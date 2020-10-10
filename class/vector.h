@@ -33,6 +33,8 @@ private:
 	size_t m_size;
 	size_t m_capacity;
 
+	T_ptr m_future_data;
+	T_ptr m_future_cap;
 public:
 	vector() : m_data(nullptr), m_size(0), m_capacity(0) noexcept {};
 
@@ -70,12 +72,13 @@ public:
 	void zero() {
 		memset(m_data, 0, sizeof(T) * m_capacity);
 	}
+	void clear() {
+		zero();
+	}
+
+	T_ptr reserve(const size_t& amount) {
+
+	}
 };
-
-template<typename alloc_type>
-class vector<bool, alloc_type> {
-
-};
-
 
 _CUSTOM_END_
