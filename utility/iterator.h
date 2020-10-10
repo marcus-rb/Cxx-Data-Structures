@@ -22,7 +22,9 @@ public:
 	virtual base_iterator& operator--() = 0;
 	virtual base_iterator operator--(int) = 0;
 
-	virtual T_ref operator[](const size_t) = 0;
+	virtual bool operator==(base_iterator&) = 0;
+	virtual bool operator!=(base_iterator&) = 0;
+	//virtual T_ref operator[](const size_t) = 0;
 };
 
 template <typename T>

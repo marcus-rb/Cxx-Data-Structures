@@ -12,9 +12,9 @@ struct enable_if<true, T> {
 	typedef T type;
 };
 
-template<typename T>
-struct is_object {
-
-};
+template <typename T>
+bool is_object() {
+	return true;
+}
 
 _CUSTOM_END_
