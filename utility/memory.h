@@ -54,7 +54,7 @@ public:
 	using T_ptr = T*;
 	using T_ref = T&;
 
-	virtual T_ptr address(const T_ref value);
+	virtual T_ptr address(const T_ref value) = 0;
 
 	// memory methods should allocate for amount elements of type T
 	virtual void deallocate(T_ptr const ptr, const size_t& count) = 0;

@@ -9,11 +9,11 @@
 _CUSTOM_BEGIN_ // namespace custom {
 
 template<typename array_type>
-class array_iterator : public base_iterator<typename array_type::T> {
+class array_iterator : public base_iterator<typename array_type::value_type, array_iterator<array_type>> {
 public:
 	using T_ptr = typename array_type::T_ptr;
 	using T_ref = typename array_type::T_ref;
-	using T = typename array_type::T;
+	using T = typename array_type::value_type;
 
 private:
 	size_t m_index;
@@ -52,6 +52,14 @@ public:
 		--(*this);
 		return temp;
 	}
+
+	bool operator==(array_iterator& other) {
+		return m_index == other.m_index && m_array_ptr == other.m_array_ptr;
+	}
+
+	bool operator!=(array_iterator& other) {
+		return !operator==(other);
+	}
 };
 
 template <typename T, size_t S>
@@ -62,6 +70,7 @@ public:
 	using T_ref = T&;
 	using T_ptr = T*;
 
+	using value_type = T;
 private:
 	T m_data[S];
 

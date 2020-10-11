@@ -9,7 +9,7 @@ _CUSTOM_BEGIN_ // namespace custom {
 #define _VECTOR_REALLOCATE_RATIO_ 1
 
 template <typename vector_type>
-class vector_iterator : public base_iterator<typename vector_type::value_type> {
+class vector_iterator : public base_iterator<typename vector_type::value_type, vector_iterator<vector_type>> {
 public:
 	using T_ptr = typename vector_type::T_ptr;
 	using T_ref = typename vector_type::T_ref;
@@ -30,7 +30,7 @@ public:
 	}
 
 	T_ptr operator->() {
-		return m_array_ptr+index;
+		return m_array_ptr+m_index;
 	}
 
 	vector_iterator& operator++() {
@@ -167,7 +167,12 @@ public:
 		}
 		else {
 			// this could be optimized but I can't be bothered. This is way easier
+			// Idk if this is a good solution, but we avoid storing the ratio as a variable, and it is easily adjusted
+			#if _VECTOR_REALLOCATE_RATIO_ <= 1
+			reallocate(m_capacity + m_capacity * _VECTOR_REALLOCATE_RATIO_);
+			#else 
 			reallocate(m_capacity * _VECTOR_REALLOCATE_RATIO_);
+			#endif
 		}
 
 		return iterator(m_data, position);
@@ -185,6 +190,4 @@ private:
 };
 
 _CUSTOM_END_
-
-custom::vector<int> test_vector(10);
 
