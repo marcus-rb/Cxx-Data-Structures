@@ -184,6 +184,10 @@ public:
 		push_back(value);
 	}
 
+	iterator emplace_back() {
+
+	}
+
 	iterator insert(const size_t& position, const T& value) {
 		// If m_capacity > m_size, no reallocation is needed
 		if (m_capacity > m_size) {
@@ -201,34 +205,32 @@ public:
 		return iterator(m_data, position);
 	}
 
+	iterator emplace_back() {
+
+	}
+
 	iterator erase(iterator position) {
 		for (; position != this->end(); ++position) {
-			m_data[position] = m_data[position - 1];
+			*(m_data + position) = *(m_data + position - 1);
 		}
 	}
 	iterator erase(iterator first, iterator last) {
-		// Remove elements from a to b, aka move all elements past b b-a backwards
-		size_t amount_of_elements_to_delete = last.m_index - first.m_index;
-		// Første som skal fjernes er:
-		// m_data[a] = m_data[b+1];
-		// m_data[a+1] = m_data[b+2]
-		// until m_data[a+x] = end()
-
-		size_t i = 0;
-		for (auto it = first; it != last; ++it) {
+	#if _CLEAN_VECTOR_MEMORY_
+		for (auto it = first; first != ++last; ++it) {
 			*it = 0;
 		}
-		while (last.m_index + i < m_size) {
+		--last;
+	#endif
 
+		inline size_t amount_of_elements_to_delete = last.m_index - first.m_index;
+		size_t i = 0;
+		while (i < m_size && i < amount_of_elements_to_delete) { // We cannot take elements from past the end of array when deleting
+
+			*(m_data + first.m_index + i) = *(m_data + last.m_index + 1 + i);
+			i++;
 		}
-
-		//m_size -= last.m_index - first.m_index;
-		for (size_t i = 0; first.m_index + i != *(this->end().m_index); ++i) {
-			m_data[first.m_index + i] = m_data[last.m_index + i + 1];
-		}
-
-		// at end:
 		m_size -= amount_of_elements_to_delete;
+		return iterator(m_data, first.m_index);
 	}
 
 	iterator pop_back() {
@@ -239,7 +241,20 @@ public:
 		return this->end();
 	}
 
-
+	void resize(const size_t& count) {
+		if (count > m_capacity) {
+			increase_capacity();
+			resize(count);
+		}
+		else {
+		#if _CLEAN_VECTOR_MEMORY_
+			if (m_size > count) {
+				erase(iterator(m_data, count), this->end());
+			}
+		#endif
+			m_size = count;
+		}
+	}
 
 	void emplace();
 	void emplace_back();
