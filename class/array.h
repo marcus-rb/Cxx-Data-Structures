@@ -13,7 +13,7 @@ class array_iterator : public base_iterator<typename array_type::value_type, arr
 public:
 	using T_ptr = typename array_type::T_ptr;
 	using T_ref = typename array_type::T_ref;
-	using T = typename array_type::value_type;
+	//using T = typename array_type::value_type;
 
 private:
 	size_t m_index;
@@ -65,13 +65,17 @@ public:
 template <typename T, size_t S>
 class array {
 public:
+
 	using iterator = custom::array_iterator<array<T, S>>;
 
 	using T_ref = T&;
 	using T_ptr = T*;
+	using const_T_ref = const T&;
+	using const_T_ptr = const T*;
 
 	using value_type = T;
 private:
+
 	T m_data[S];
 
 public:
@@ -79,21 +83,21 @@ public:
 	T_ptr data() {
 		return m_data;
 	}
-	const T_ptr data() const {
+	const_T_ptr data() const {
 		return m_data;
 	}
 
 	T_ref back() {
 		return m_data[S - 1];
 	}
-	const T_ref back() const {
+	const_T_ref back() const {
 		return m_data[S - 1];
 	}
 
 	T_ref front() {
 		return m_data[0];
 	}
-	const T_ref front() const {
+	const_T_ref front() const {
 		return m_data[0];
 	}
 
@@ -101,7 +105,7 @@ public:
 		index > S - 1 ? NULL : __debugbreak();
 		return m_data[index];
 	}
-	const T_ref at(const size_t& index) const {
+	const_T_ref at(const size_t& index) const {
 		index > S - 1 ? NULL : __debugbreak();
 		return m_data[index];
 	}
@@ -109,7 +113,7 @@ public:
 	T_ref operator[] (const size_t& index) {
 		return m_data[index];
 	}
-	const T_ref operator[](const size_t& index) const {
+	const_T_ref operator[](const size_t& index) const {
 		return m_data[index];
 	}
 
@@ -152,3 +156,17 @@ public:
 };
 
 _CUSTOM_END_
+
+template <typename T, size_t N>
+bool operator==(const custom::array<T, N>& lhs, const custom::array<T, N>& rhs) {
+	if (lhs.size() == rhs.size()) {
+		size_t return_value = 0;
+		for (size_t i = 0; i < lhs.size(); i++) {
+			lhs[i] != rhs[i] ? ++return_value : 0;
+		}
+		return return_value ? false : true;
+	}
+	else {
+		return false;
+	}
+}
