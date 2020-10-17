@@ -23,9 +23,14 @@ private:
 
 public:
 	vector_iterator() : m_index(0), m_array_ptr(nullptr) noexcept {};
-	vector_iterator(T_ptr array_ptr, size_t index) {
+	vector_iterator(T_ptr array_ptr, const size_t& index) {
 		m_index = index;
 		m_array_ptr = array_ptr;
+	}
+
+	vector_iterator(vector_type& vec, const size_t& index) {
+		m_index = index;
+		m_array_ptr = vec.m_data;
 	}
 
 	T_ref operator*() {
@@ -63,6 +68,10 @@ public:
 	bool operator!=(vector_iterator& other) {
 		return !operator==(other);
 	}
+
+	const size_t& get_index() const {
+		return m_index;
+	}
 };
 
 template <typename T, typename alloc = allocator<T>>
@@ -85,9 +94,8 @@ private:
 public:
 	vector() : m_data(nullptr), m_size(0), m_capacity(0) noexcept {};
 
-	vector(const size_t& initial_cap) : m_size(0) {
+	vector(const size_t& initial_cap) : m_size(initial_cap), m_capacity(initial_cap) {
 		m_data = alloc::allocate(m_capacity);
-		m_capacity = initial_cap;
 	}
 
 	vector(const vector& other) {
@@ -181,7 +189,7 @@ public:
 	}
 
 	iterator push_back(T&& value) {
-		push_back(value);
+		return push_back((const T&)value);
 	}
 
 	iterator emplace_back() {
@@ -209,28 +217,36 @@ public:
 
 	}
 
+	iterator erase(const size_t& position) {
+		erase(iterator(m_data, position));
+	}
 	iterator erase(iterator position) {
 		for (; position != this->end(); ++position) {
 			*(m_data + position) = *(m_data + position - 1);
 		}
 	}
-	iterator erase(iterator& first, iterator& last) {
+
+	iterator erase(const size_t& first, const size_t& last) {
+		return erase(iterator(m_data, first), iterator(m_data, last));
+	}
+	iterator erase(iterator first, iterator last) {
 	#if _CLEAN_VECTOR_MEMORY_
-		for (auto it = first; first != ++last; ++it) {
+		++last;
+		for (auto it = first; it != last; ++it) {
 			*it = 0;
 		}
 		--last;
 	#endif
 
-		inline size_t amount_of_elements_to_delete = last.m_index - first.m_index;
+		size_t amount_of_elements_to_delete = last.get_index() - first.get_index() + 1;
 		size_t i = 0;
 		while (i < m_size && i < amount_of_elements_to_delete) { // We cannot take elements from past the end of array when deleting
 
-			*(m_data + first.m_index + i) = *(m_data + last.m_index + 1 + i);
+			*(m_data + first.get_index() + i) = *(m_data + last.get_index() + 1 + i);
 			i++;
 		}
 		m_size -= amount_of_elements_to_delete;
-		return iterator(m_data, first.m_index);
+		return iterator(m_data, first.get_index());
 	}
 
 	iterator pop_back() {
@@ -247,34 +263,30 @@ public:
 			resize(count);
 		}
 		else {
-		#if _CLEAN_VECTOR_MEMORY_
+			#if _CLEAN_VECTOR_MEMORY_
 			if (m_size > count) {
 				erase(iterator(m_data, count), this->end());
 			}
-		#endif
+			#endif
 			m_size = count;
 		}
 	}
-
-	void emplace();
-	void emplace_back();
-	void swap();
-
 
 private:
 	void increase_capacity() {
 		// this could be optimized but I can't be bothered. This is way easier
 		// Idk if this is a good solution, but we avoid storing the ratio as a variable, and it is easily adjusted
-		#if _VECTOR_REALLOCATE_RATIO_ <= 1
+	#if _VECTOR_REALLOCATE_RATIO_ <= 1
 		reallocate(m_capacity + m_capacity * _VECTOR_REALLOCATE_RATIO_);
-		#else 
+	#else 
 		reallocate(m_capacity * _VECTOR_REALLOCATE_RATIO_);
-		#endif
+	#endif
 	}
 	void reallocate(size_t new_capacity) {
-		// 1. allocate a new block of memory
+
 		T_ptr new_pos = alloc::allocate(new_capacity);
-		memcpy(new_pos, m_data, m_size);
+		for (size_t i = 0; i < m_size; i++)
+			*(new_pos + i) = *(m_data + i);
 		alloc::deallocate(m_data, m_capacity);
 		m_data = new_pos;
 		m_capacity = new_capacity;
