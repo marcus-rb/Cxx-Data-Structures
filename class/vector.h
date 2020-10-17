@@ -1,5 +1,7 @@
 #pragma once
 
+// [ ] implicit vector iterator
+
 #include "..\core\custom_def.h"
 #include "..\utility\memory.h"
 #include "..\utility\iterator.h"
@@ -7,6 +9,7 @@
 _CUSTOM_BEGIN_ // namespace custom {
 
 #define _VECTOR_REALLOCATE_RATIO_ 1
+#define _CLEAN_VECTOR_MEMORY_ 1
 
 template <typename vector_type>
 class vector_iterator : public base_iterator<typename vector_type::value_type, vector_iterator<vector_type>> {
@@ -71,6 +74,9 @@ public:
 	using T_ptr = T*;
 	using T_ref = T&;
 
+	using const_T_ref = const T&;
+	using const_T_ptr = const T*;
+
 	using value_type = T;
 private:
 	T_ptr m_data;
@@ -131,6 +137,11 @@ public:
 	}
 
 	T_ptr shrink_to_fit() {
+	#if _CLEAN_VECTOR_MEMORY_
+		for (size_t i = m_size; i < m_capacity; i++) {
+			*(m_data + i) = 0;
+		}
+	#endif
 		realloc(m_data, sizeof(T) * m_size);
 		m_capacity = m_size;
 	}
@@ -157,6 +168,22 @@ public:
 		zero();
 	}
 
+	iterator push_back(const T& value) {
+		if (m_capacity > m_size) {
+			*(m_data + m_size) = value;
+			m_size++;
+		}
+		else {
+			increase_capacity();
+			push_back(value);
+		}
+		return iterator(m_data, m_size - 1);
+	}
+
+	iterator push_back(T&& value) {
+		push_back(value);
+	}
+
 	iterator insert(const size_t& position, const T& value) {
 		// If m_capacity > m_size, no reallocation is needed
 		if (m_capacity > m_size) {
@@ -164,21 +191,72 @@ public:
 				*(m_data + i - 1) = *(m_data + i - 2);
 			}
 			m_data[position] = value;
+			m_size++;
 		}
 		else {
-			// this could be optimized but I can't be bothered. This is way easier
-			// Idk if this is a good solution, but we avoid storing the ratio as a variable, and it is easily adjusted
-			#if _VECTOR_REALLOCATE_RATIO_ <= 1
-			reallocate(m_capacity + m_capacity * _VECTOR_REALLOCATE_RATIO_);
-			#else 
-			reallocate(m_capacity * _VECTOR_REALLOCATE_RATIO_);
-			#endif
+			increase_capacity();
+			insert(position, value);
 		}
 
 		return iterator(m_data, position);
 	}
 
+	iterator erase(iterator position) {
+		for (; position != this->end(); ++position) {
+			m_data[position] = m_data[position - 1];
+		}
+	}
+	iterator erase(iterator first, iterator last) {
+		// Remove elements from a to b, aka move all elements past b b-a backwards
+		size_t amount_of_elements_to_delete = last.m_index - first.m_index;
+		// Første som skal fjernes er:
+		// m_data[a] = m_data[b+1];
+		// m_data[a+1] = m_data[b+2]
+		// until m_data[a+x] = end()
+
+		size_t i = 0;
+		for (auto it = first; it != last; ++it) {
+			*it = 0;
+		}
+		while (last.m_index + i < m_size) {
+
+		}
+
+		//m_size -= last.m_index - first.m_index;
+		for (size_t i = 0; first.m_index + i != *(this->end().m_index); ++i) {
+			m_data[first.m_index + i] = m_data[last.m_index + i + 1];
+		}
+
+		// at end:
+		m_size -= amount_of_elements_to_delete;
+	}
+
+	iterator pop_back() {
+		m_size--;
+	#if _CLEAN_VECTOR_MEMORY_
+		m_data[m_size] = NULL;
+	#endif
+		return this->end();
+	}
+
+
+
+	void emplace();
+	void emplace_back();
+	void resize();
+	void swap();
+
+
 private:
+	void increase_capacity() {
+		// this could be optimized but I can't be bothered. This is way easier
+		// Idk if this is a good solution, but we avoid storing the ratio as a variable, and it is easily adjusted
+		#if _VECTOR_REALLOCATE_RATIO_ <= 1
+		reallocate(m_capacity + m_capacity * _VECTOR_REALLOCATE_RATIO_);
+		#else 
+		reallocate(m_capacity * _VECTOR_REALLOCATE_RATIO_);
+		#endif
+	}
 	void reallocate(size_t new_capacity) {
 		// 1. allocate a new block of memory
 		T_ptr new_pos = alloc::allocate(new_capacity);
