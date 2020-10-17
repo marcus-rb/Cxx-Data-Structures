@@ -9,3 +9,4 @@ class/unordered_map.h
 class/unordered_multimap.h
 class/unordered_multiset.h
 class/unordered_set.h
+class/vector_list.h
