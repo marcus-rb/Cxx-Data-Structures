@@ -205,7 +205,7 @@ public:
 		return iterator(m_data, position);
 	}
 
-	iterator emplace_back() {
+	iterator emplace() {
 
 	}
 
@@ -214,7 +214,7 @@ public:
 			*(m_data + position) = *(m_data + position - 1);
 		}
 	}
-	iterator erase(iterator first, iterator last) {
+	iterator erase(iterator& first, iterator& last) {
 	#if _CLEAN_VECTOR_MEMORY_
 		for (auto it = first; first != ++last; ++it) {
 			*it = 0;
@@ -258,7 +258,6 @@ public:
 
 	void emplace();
 	void emplace_back();
-	void resize();
 	void swap();
 
 
