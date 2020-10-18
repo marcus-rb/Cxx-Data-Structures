@@ -17,6 +17,8 @@ public:
 	using T_ptr = typename vector_type::T_ptr;
 	using T_ref = typename vector_type::T_ref;
 
+	using value_type = typename vector_type::value_type;
+
 private:
 	size_t m_index;
 	T_ptr m_array_ptr;
@@ -72,6 +74,8 @@ public:
 	const size_t& get_index() const {
 		return m_index;
 	}
+
+	friend vector_type;
 };
 
 template <typename T, typename alloc = custom::allocator<T>>
@@ -79,6 +83,7 @@ class vector {
 public:
 
 	using iterator = custom::vector_iterator<vector<T, alloc>>;
+	using value_type = T;
 
 	using T_ptr = T*;
 	using T_ref = T&;
@@ -86,11 +91,18 @@ public:
 	using const_T_ref = const T&;
 	using const_T_ptr = const T*;
 
-	using value_type = T;
 private:
+
+	struct local_allocator {
+		T_ptr (*allocate)(const size_t&) = alloc::allocate;
+		void (*deallocate)(T_ptr const, const size_t&) = alloc::deallocate;
+		T_ptr (*address)(T_ref) = alloc::address;
+	};
+
 	T_ptr m_data;
 	size_t m_size;
 	size_t m_capacity;
+
 public:
 	vector() : m_data(nullptr), m_size(0), m_capacity(0) noexcept {};
 
@@ -109,8 +121,8 @@ public:
 		alloc::deallocate(m_data, m_capacity);
 	}
 
-	alloc* get_allocator() {
-		return alloc;
+	local_allocator get_allocator() {
+		return local_allocator();
 	}
 
 	// -- ELEMENT ACCESS --
@@ -279,9 +291,30 @@ public:
 	}
 
 	void swap(vector& other) {
-		if (this->get_allocator() == other.get_allocator()) { // SAME TYPE YA YEET
+		if (m_capacity >= other.m_size && other.m_capacity >= m_size) {
+			unsigned int largest = other.m_size > m_size ? other.m_size : m_size;
+			for (size_t i = 0; i < largest; i++) {
+				T temp = *(m_data + i);
+				*(m_data + i) = *(other.m_data + i);
+				*(other.m_data + i) = temp;
+			}
+			size_t temp_size = m_size;
+			m_size = other.m_size;
+			other.m_size = temp_size;
 
+		#if _CLEAN_VECTOR_MEMORY_
+			for (auto it = this->end(); it.m_index != m_capacity; ++it) {
+				*it = 0;
+			}
+			for (auto it = other.end(); it.m_index != other.m_capacity; ++it) {
+				*it = 0;
+			}
+		#endif
 		}
+		else {
+			// ERROR: vectors cannot be swapped
+		}
+
 	}
 
 private:
@@ -303,6 +336,8 @@ private:
 		m_data = new_pos;
 		m_capacity = new_capacity;
 	}
+
+	
 };
 
 _CUSTOM_END_
