@@ -12,7 +12,7 @@ _CUSTOM_BEGIN_ // namespace custom {
 #define _CLEAN_VECTOR_MEMORY_ 1
 
 template <typename vector_type>
-class vector_iterator : public base_iterator<typename vector_type::value_type, vector_iterator<vector_type>> {
+class vector_iterator : public custom::base_iterator<typename vector_type::value_type, custom::vector_iterator<vector_type>> {
 public:
 	using T_ptr = typename vector_type::T_ptr;
 	using T_ref = typename vector_type::T_ref;
@@ -74,11 +74,11 @@ public:
 	}
 };
 
-template <typename T, typename alloc = allocator<T>>
+template <typename T, typename alloc = custom::allocator<T>>
 class vector {
 public:
 
-	using iterator = vector_iterator<vector<T, alloc>>;
+	using iterator = custom::vector_iterator<vector<T, alloc>>;
 
 	using T_ptr = T*;
 	using T_ref = T&;
@@ -107,6 +107,10 @@ public:
 
 	~vector() {
 		alloc::deallocate(m_data, m_capacity);
+	}
+
+	alloc* get_allocator() {
+		return alloc;
 	}
 
 	// -- ELEMENT ACCESS --
@@ -192,8 +196,14 @@ public:
 		return push_back((const T&)value);
 	}
 
-	iterator emplace_back() {
+	template<typename... arguments>
+	iterator emplace_back(arguments&&... args) {
+		push_back(T(args));
+	}
 
+	template<typename... arguments>
+	iterator emplace(const size_t& position, arguments&&... args) {
+		insert(position , T(args));
 	}
 
 	iterator insert(const size_t& position, const T& value) {
@@ -211,10 +221,6 @@ public:
 		}
 
 		return iterator(m_data, position);
-	}
-
-	iterator emplace() {
-
 	}
 
 	iterator erase(const size_t& position) {
@@ -269,6 +275,12 @@ public:
 			}
 			#endif
 			m_size = count;
+		}
+	}
+
+	void swap(vector& other) {
+		if (this->get_allocator() == other.get_allocator()) { // SAME TYPE YA YEET
+
 		}
 	}
 
