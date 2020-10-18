@@ -86,6 +86,8 @@ public:
 	static T_ptr allocate(const size_t& amount) {
 		return mem_core::allocate<T>(amount);
 	}
+private:
+	allocator() = default;
 };
 
 _CUSTOM_END_
