@@ -327,6 +327,7 @@ private:
 		reallocate(m_capacity * _VECTOR_REALLOCATE_RATIO_);
 	#endif
 	}
+
 	void reallocate(size_t new_capacity) {
 
 		T_ptr new_pos = alloc::allocate(new_capacity);
@@ -336,9 +337,19 @@ private:
 		m_data = new_pos;
 		m_capacity = new_capacity;
 	}
-
-	
 };
 
 _CUSTOM_END_
 
+template<typename T, typename alloc = custom::allocator<T>>
+bool operator==(custom::vector<T, alloc>& lhs, custom::vector<T, alloc>& rhs) {
+	size_t return_signal = 0;
+	if (lhs.size() == rhs.size()) {
+		for (size_t i = 0; i < lhs.size(); i++)
+			lhs[i] == rhs[i] ? NULL : return_signal++;
+		return return_signal ? false : true;
+	}
+	else {
+		return false;
+	}
+}
