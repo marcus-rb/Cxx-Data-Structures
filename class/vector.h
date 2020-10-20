@@ -110,12 +110,15 @@ public:
 		m_data = alloc::allocate(m_capacity);
 	}
 
-	vector(const vector& other) {
+	vector& operator=(const vector& other) {
 		m_size = other.m_size;
 		m_capacity = other.m_capacity;
 		m_data = alloc::allocate(other.m_capacity);
 		memcpy(m_data, other.m_data, m_capacity);
 	}
+
+	// TODO: vector move assignment
+	vector& operator=(vector&&);
 
 	~vector() {
 		alloc::deallocate(m_data, m_capacity);
