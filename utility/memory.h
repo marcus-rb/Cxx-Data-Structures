@@ -47,6 +47,23 @@ typename enable_if<false, T*>::type addressof(T& argument) noexcept {
 template <typename T>
 T* addressof(T&& arg) = delete;
 
+// if T is object_type
+template <typename T>
+typename enable_if<true, T>::type destroy_and_clean(T* address) noexcept {
+	return T;
+}
+
+template <typename T>
+void destroy_and_clean(typename enable_if<is_object<T>(), T>::type* address) noexcept {
+
+}
+
+// T is not object type
+template <typename T>
+void destroy_and_clean(typename enable_if<false, T>::type* address) noexcept {
+
+}
+
 // Interface for usage of custom allocators with the custom:: namespace containers.
 template <typename T>
 class base_allocator {
