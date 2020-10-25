@@ -55,13 +55,13 @@ typename enable_if<true, T>::type destroy_and_clean(T* address) noexcept {
 
 template <typename T>
 void destroy_and_clean(typename enable_if<is_object<T>(), T>::type* address) noexcept {
-
+	*address = 0;
 }
 
 // T is not object type
 template <typename T>
 void destroy_and_clean(typename enable_if<false, T>::type* address) noexcept {
-
+	*address = 0;
 }
 
 // Interface for usage of custom allocators with the custom:: namespace containers.
