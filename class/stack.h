@@ -38,10 +38,9 @@ public:
 	}
 
 	const bool empty() const {
-		return m_count ? false : true;
+		return m_count == 0;
 	}
 
-	friend bool operator==(const stack& lhs, const stack& rhs);
 private:
 	size_t m_count;
 	T m_data[N];
