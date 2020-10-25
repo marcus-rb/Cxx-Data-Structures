@@ -104,7 +104,7 @@ private:
 	size_t m_capacity;
 
 public:
-	vector() : m_data(nullptr), m_size(0), m_capacity(0) noexcept {};
+	vector() noexcept : m_data(nullptr), m_size(0), m_capacity(0) {};
 
 	vector(const size_t& initial_cap) : m_size(initial_cap), m_capacity(initial_cap) {
 		m_data = alloc::allocate(m_capacity);
@@ -127,6 +127,10 @@ public:
 	}
 
 	vector& operator=(const vector& other) {
+	#if _CLEAN_VECTOR_MEMORY_
+		clean_vector();
+	#endif
+		alloc::deallocate(m_data, m_capacity);
 
 		m_size = other.m_size;
 		m_capacity = other.m_capacity;
@@ -134,10 +138,6 @@ public:
 	}
 
 	vector& operator=(vector&& other) {
-		// Move assignment - what happens?
-		// We steal the temporary data, and delete this data;
-		
-		// 1. free up our old memory
 	#if _CLEAN_VECTOR_MEMORY_
 		clean_vector();
 	#endif
@@ -163,7 +163,7 @@ public:
 	}
 
 	T_ref at(const size_t index) {
-		index > m_size - 1 : __debugbreak() : NULL;
+		index > m_size - 1 ? __debugbreak() : NULL;
 		return *(m_data + index);
 	}
 
@@ -218,7 +218,9 @@ public:
 
 	// -- MODIFIERS --
 	void zero() {
-		memset(m_data, 0, sizeof(T) * m_capacity);
+		for (size_t i = 0; i < m_size; i++) {
+			m_data[i] = 0;
+		}
 	}
 	void clear() {
 		zero();
@@ -242,7 +244,7 @@ public:
 
 	template<typename... arguments>
 	iterator emplace_back(arguments&&... args) {
-		push_back(T(args));
+		return push_back(T(args...));
 	}
 
 	template<typename... arguments>
@@ -351,8 +353,10 @@ public:
 
 private:
 	void increase_capacity() {
-		// this could be optimized but I can't be bothered. This is way easier
-		// Idk if this is a good solution, but we avoid storing the ratio as a variable, and it is easily adjusted
+
+		if (m_capacity == 0) // Prevent recursive calls if this is the first increase
+			m_capacity = 1;
+
 	#if _VECTOR_REALLOCATE_RATIO_ <= 1
 		reallocate(m_capacity + m_capacity * _VECTOR_REALLOCATE_RATIO_);
 	#else 
