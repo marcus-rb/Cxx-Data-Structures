@@ -118,14 +118,36 @@ public:
 			(*m_data + i) = (*other.m_data + i);
 	}
 
+	vector(vector&& other) {
+		m_size = other.m_size;
+		m_capacity = other.m_capacity;
+		m_data = other.m_data;
+
+		other.m_data = nullptr;
+	}
+
 	vector& operator=(const vector& other) {
+
 		m_size = other.m_size;
 		m_capacity = other.m_capacity;
 		m_data = other.m_data;
 	}
 
-	// TODO: vector move assignment
-	vector& operator=(vector&&);
+	vector& operator=(vector&& other) {
+		// Move assignment - what happens?
+		// We steal the temporary data, and delete this data;
+		
+		// 1. free up our old memory
+	#if _CLEAN_VECTOR_MEMORY_
+		clean_vector();
+	#endif
+		alloc::deallocate(m_data, m_capacity);
+		m_data = other.m_data;
+		m_size = other.m_size;
+		m_capacity = other.m_capacity;
+
+		other.m_data = nullptr;
+	}
 
 	~vector() {
 		alloc::deallocate(m_data, m_capacity);
@@ -167,7 +189,7 @@ public:
 
 	// -- CAPACITY --
 	bool empty() const {
-		return m_size ? false : true;
+		return m_size == 0;
 	}
 
 	T_ptr shrink_to_fit() {
@@ -336,6 +358,15 @@ private:
 	#else 
 		reallocate(m_capacity * _VECTOR_REALLOCATE_RATIO_);
 	#endif
+	}
+
+	void clean_vector() {
+
+		// destroy_and_clean determines wether or not T is an object-type
+		for (size_t i = 0; i < m_size; i++) {
+			mem_core::destroy_and_clean<T>(m_data + i);
+		}
+
 	}
 
 	void reallocate(size_t new_capacity) {
