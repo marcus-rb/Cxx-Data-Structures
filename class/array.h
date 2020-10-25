@@ -79,6 +79,7 @@ private:
 	T m_data[S];
 
 public:
+
 	// element access
 	T_ptr data() {
 		return m_data;
