@@ -10,6 +10,7 @@ _CUSTOM_BEGIN_
 #define _MEMORY_CORE_BEGIN_ namespace mem_core {
 #define _MEMORY_CORE_END_ }
 
+// Core memory functionality of library
 _MEMORY_CORE_BEGIN_
 
 #define _LIB_STANDARD_ALIGNMENT_ 8U
